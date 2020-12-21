@@ -802,6 +802,19 @@ void AsyncClient::close(bool now)
     if (_socket != -1) _close();
 }
 
+int8_t AsyncClient::abort(){
+    if (_socket != -1) {
+        // Note: needs LWIP_SO_LINGER to be enabled in order to work, otherwise
+        // this call is equivalent to close().
+        struct linger l;
+        l.l_onoff = 1;
+        l.l_linger = 0;
+        setsockopt(_socket, SOL_SOCKET, SO_LINGER, &l, sizeof(l));
+        _close();
+    }
+    return ERR_ABRT;
+}
+
 const char * AsyncClient::errorToString(int8_t error){
     switch(error){
         case ERR_OK: return "OK";
