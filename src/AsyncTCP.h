@@ -180,6 +180,7 @@ class AsyncClient : public AsyncSocketBase
     } queued_writebuf;
 
     // Queue of buffers to write to socket
+    SemaphoreHandle_t _write_mutex;
     std::deque<queued_writebuf> _writeQueue;
     bool _ack_timeout_signaled = false;
 
