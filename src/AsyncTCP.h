@@ -87,7 +87,7 @@ class AsyncClient : public AsyncSocketBase
     bool connect(const char* host, uint16_t port);
     void close(bool now = false);
 
-    int8_t abort();
+    //int8_t abort();
     bool free();
 
     bool canSend() { return space() > 0; }

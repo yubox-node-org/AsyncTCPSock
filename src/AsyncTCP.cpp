@@ -777,6 +777,18 @@ void AsyncClient::_clearWriteQueue(void)
     }
 }
 
+bool AsyncClient::free(){
+    if (_socket == -1) return true;
+    return (_conn_state == 0 || _conn_state > 4);
+}
+
+size_t AsyncClient::write(const char* data) {
+    if(data == NULL) {
+        return 0;
+    }
+    return write(data, strlen(data));
+}
+
 size_t AsyncClient::write(const char* data, size_t size, uint8_t apiflags) {
     size_t will_send = add(data, size, apiflags);
     if(!will_send || !send()) {
