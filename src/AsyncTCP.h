@@ -193,6 +193,7 @@ class AsyncClient : public AsyncSocketBase
     void _sockIsReadable(void);
     void _sockPoll(void);
     void _sockDelayedConnect(void);
+    void _removeAllCallbacks(void);
     void _clearWriteQueue(void);
 
     friend void _tcpsock_dns_found(const char * name, struct ip_addr * ipaddr, void * arg);

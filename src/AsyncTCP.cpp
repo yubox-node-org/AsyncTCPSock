@@ -690,6 +690,24 @@ void AsyncClient::_sockPoll(void)
     }
 }
 
+void AsyncClient::_removeAllCallbacks(void)
+{
+    _connect_cb = NULL;
+    _connect_cb_arg = NULL;
+    _discard_cb = NULL;
+    _discard_cb_arg = NULL;
+    _sent_cb = NULL;
+    _sent_cb_arg = NULL;
+    _error_cb = NULL;
+    _error_cb_arg = NULL;
+    _recv_cb = NULL;
+    _recv_cb_arg = NULL;
+    _timeout_cb = NULL;
+    _timeout_cb_arg = NULL;
+    _poll_cb = NULL;
+    _poll_cb_arg = NULL;
+}
+
 void AsyncClient::_close(void)
 {
     //Serial.print("AsyncClient::_close: "); Serial.println(_socket);
@@ -700,6 +718,7 @@ void AsyncClient::_close(void)
     xSemaphoreGive(_asyncsock_mutex);
 
     if (_discard_cb) _discard_cb(_discard_cb_arg, this);
+    _removeAllCallbacks();
     _clearWriteQueue();
 }
 
@@ -713,6 +732,7 @@ void AsyncClient::_error(int8_t err)
 
     if (_error_cb) _error_cb(_error_cb_arg, this, err);
     if (_discard_cb) _discard_cb(_discard_cb_arg, this);
+    _removeAllCallbacks();
     _clearWriteQueue();
 }
 
@@ -766,12 +786,14 @@ bool AsyncClient::send()
 // of errors before all data was written.
 void AsyncClient::_clearWriteQueue(void)
 {
+    xSemaphoreTake(_write_mutex, (TickType_t)portMAX_DELAY);
     while (_writeQueue.size() > 0) {
         if (_writeQueue.front().owned) {
             ::free(_writeQueue.front().data);
         }
         _writeQueue.pop_front();
     }
+    xSemaphoreGive(_write_mutex);
 }
 
 bool AsyncClient::free(){
