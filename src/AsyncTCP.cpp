@@ -621,7 +621,7 @@ bool AsyncClient::_sockIsWriteable(void)
                 _rx_last_packet = millis();
                 if (_writeQueue.front().owned) ::free(_writeQueue.front().data);
                 sent_cb_length = _writeQueue.front().length;
-                uint32_t sent_cb_delay = millis() - _writeQueue.front().queued_at;
+                sent_cb_delay = millis() - _writeQueue.front().queued_at;
                 _writeQueue.pop_front();
             }
         }
