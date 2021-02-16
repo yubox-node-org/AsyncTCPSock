@@ -429,7 +429,7 @@ uint16_t AsyncClient::getLocalPort() {
     getsockname(_socket, (struct sockaddr*)&addr, &len);
     struct sockaddr_in *s = (struct sockaddr_in *)&addr;
 
-    ntohs(s->sin_port);
+    return ntohs(s->sin_port);
 }
 
 IPAddress AsyncClient::remoteIP() {
