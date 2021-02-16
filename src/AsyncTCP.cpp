@@ -287,6 +287,7 @@ AsyncClient::~AsyncClient()
 {
     if (_socket != -1) _close();
     vSemaphoreDelete(_write_mutex);
+    _write_mutex = NULL;
 }
 
 void AsyncClient::setRxTimeout(uint32_t timeout){
