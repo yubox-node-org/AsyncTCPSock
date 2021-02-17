@@ -718,9 +718,9 @@ void AsyncClient::_close(void)
     _socket = -1;
     xSemaphoreGive(_asyncsock_mutex);
 
+    _clearWriteQueue();
     if (_discard_cb) _discard_cb(_discard_cb_arg, this);
     _removeAllCallbacks();
-    _clearWriteQueue();
 }
 
 void AsyncClient::_error(int8_t err)
@@ -731,10 +731,10 @@ void AsyncClient::_error(int8_t err)
     _socket = -1;
     xSemaphoreGive(_asyncsock_mutex);
 
+    _clearWriteQueue();
     if (_error_cb) _error_cb(_error_cb_arg, this, err);
     if (_discard_cb) _discard_cb(_discard_cb_arg, this);
     _removeAllCallbacks();
-    _clearWriteQueue();
 }
 
 size_t AsyncClient::space()
