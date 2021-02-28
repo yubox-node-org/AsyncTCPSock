@@ -137,6 +137,12 @@ class AsyncClient : public AsyncSocketBase
     const char * errorToString(int8_t error);
 //    const char * stateToString();
 
+  protected:
+    bool _sockIsWriteable(void);
+    void _sockIsReadable(void);
+    void _sockPoll(void);
+    void _sockDelayedConnect(void);
+
   private:
 
     AcConnectHandler _connect_cb;
@@ -175,6 +181,8 @@ class AsyncClient : public AsyncSocketBase
       uint32_t  length;   // Length of data queued for write
       uint32_t  written;  // Length of data written to socket so far
       uint32_t  queued_at;// Timestamp at which this data buffer was queued
+      uint32_t  written_at; // Timestamp at which this data buffer was completely written
+      int       write_errno;  // If != 0, errno value while writing this buffer
       bool      owned;    // If true, we malloc'ed the data and should be freed after completely written.
                           // If false, app owns the memory and should ensure it remains valid until acked
     } queued_writebuf;
@@ -189,11 +197,8 @@ class AsyncClient : public AsyncSocketBase
 
     void _error(int8_t err);
     void _close(void);
-    bool _sockIsWriteable(void);
-    void _sockIsReadable(void);
-    void _sockPoll(void);
-    void _sockDelayedConnect(void);
     void _removeAllCallbacks(void);
+    bool _flushWriteQueue(void);
     void _clearWriteQueue(void);
 
     friend void _tcpsock_dns_found(const char * name, struct ip_addr * ipaddr, void * arg);
