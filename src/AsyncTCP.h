@@ -160,9 +160,6 @@ class AsyncClient : public AsyncSocketBase
     AcConnectHandler _poll_cb;
     void* _poll_cb_arg;
 
-    // Simulation of connection state
-    uint8_t _conn_state;
-
     uint32_t _rx_last_packet;
     uint32_t _rx_since_timeout;
     uint32_t _ack_timeout;
@@ -194,6 +191,9 @@ class AsyncClient : public AsyncSocketBase
 
     // Remaining space willing to queue for writing
     uint32_t _writeSpaceRemaining;
+
+    // Simulation of connection state
+    uint8_t _conn_state;
 
     void _error(int8_t err);
     void _close(void);
