@@ -37,8 +37,8 @@ extern "C" {
 
 //If core is not defined, then we are running in Arduino or PIO
 #ifndef CONFIG_ASYNC_TCP_RUNNING_CORE
-#define CONFIG_ASYNC_TCP_RUNNING_CORE -1 //any available core
-#define CONFIG_ASYNC_TCP_USE_WDT 1 //if enabled, adds between 33us and 200us per event
+#define CONFIG_ASYNC_TCP_RUNNING_CORE -1 // Any available core, but sticking to one core is recommended if using SPIFFS/LittleFS.
+#define CONFIG_ASYNC_TCP_USE_WDT 1 // If enabled, adds between 33us and 200us per event
 #endif
 
 class AsyncClient;
