@@ -285,6 +285,7 @@ AsyncClient::AsyncClient(int sockfd)
 AsyncClient::~AsyncClient()
 {
     if (_socket != -1) _close();
+    _removeAllCallbacks();
     vSemaphoreDelete(_write_mutex);
     _write_mutex = NULL;
 }
@@ -741,7 +742,6 @@ void AsyncClient::_close(void)
 
     _clearWriteQueue();
     if (_discard_cb) _discard_cb(_discard_cb_arg, this);
-    _removeAllCallbacks();
 }
 
 void AsyncClient::_error(int8_t err)
