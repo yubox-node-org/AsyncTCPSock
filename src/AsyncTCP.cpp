@@ -483,12 +483,12 @@ bool AsyncClient::connect(IPAddress ip, uint16_t port)
 #endif
 
     //Serial.printf("DEBUG: connect to %08x port %d using IP... ", ip_addr, port);
-    errno = 0; r = lwip_connect_r(sockfd, (struct sockaddr*)&serveraddr, sizeof(serveraddr));
+    errno = 0; r = ::connect(sockfd, (struct sockaddr*)&serveraddr, sizeof(serveraddr));
     //Serial.printf("r=%d errno=%d\r\n", r, errno);
     if (r < 0 && errno != EINPROGRESS) {
         //Serial.println("\t(connect failed)");
         log_e("connect on fd %d, errno: %d, \"%s\"", sockfd, errno, strerror(errno));
-        close(sockfd);
+        ::close(sockfd);
         return false;
     }
 
@@ -736,7 +736,7 @@ void AsyncClient::_close(void)
     //Serial.print("AsyncClient::_close: "); Serial.println(_socket);
     xSemaphoreTakeRecursive(_asyncsock_mutex, (TickType_t)portMAX_DELAY);
     _conn_state = 0;
-    lwip_close_r(_socket);
+    ::close(_socket);
     _socket = -1;
     xSemaphoreGiveRecursive(_asyncsock_mutex);
 
@@ -748,7 +748,7 @@ void AsyncClient::_error(int8_t err)
 {
     xSemaphoreTakeRecursive(_asyncsock_mutex, (TickType_t)portMAX_DELAY);
     _conn_state = 0;
-    lwip_close_r(_socket);
+    ::close(_socket);
     _socket = -1;
     xSemaphoreGiveRecursive(_asyncsock_mutex);
 
@@ -959,14 +959,14 @@ void AsyncServer::begin()
     server.sin_addr.s_addr = (uint32_t) _addr;
     server.sin_port = htons(_port);
     if (bind(sockfd, (struct sockaddr *)&server, sizeof(server)) < 0) {
-        lwip_close_r(sockfd);
+        ::close(sockfd);
         log_e("bind error: %d - %s", errno, strerror(errno));
         return;
     }
 
     static uint8_t backlog = 5;
     if (listen(sockfd , backlog) < 0) {
-        lwip_close_r(sockfd);
+        ::close(sockfd);
         log_e("listen error: %d - %s", errno, strerror(errno));
         return;
     }
@@ -982,7 +982,7 @@ void AsyncServer::end()
 {
     if (_socket == -1) return;
     xSemaphoreTakeRecursive(_asyncsock_mutex, (TickType_t)portMAX_DELAY);
-    lwip_close_r(_socket);
+    ::close(_socket);
     _socket = -1;
     xSemaphoreGiveRecursive(_asyncsock_mutex);
 }
@@ -994,7 +994,7 @@ void AsyncServer::_sockIsReadable(void)
     if (_connect_cb) {
         struct sockaddr_in client;
         size_t cs = sizeof(struct sockaddr_in);
-        errno = 0; int accepted_sockfd = lwip_accept_r(_socket, (struct sockaddr *)&client, (socklen_t*)&cs);
+        errno = 0; int accepted_sockfd = ::accept(_socket, (struct sockaddr *)&client, (socklen_t*)&cs);
         //Serial.printf("\t new sockfd=%d errno=%d\r\n", accepted_sockfd, errno);
         if (accepted_sockfd < 0) {
             log_e("accept error: %d - %s", errno, strerror(errno));
