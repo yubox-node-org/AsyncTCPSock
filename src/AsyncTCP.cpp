@@ -755,7 +755,6 @@ void AsyncClient::_error(int8_t err)
     _clearWriteQueue();
     if (_error_cb) _error_cb(_error_cb_arg, this, err);
     if (_discard_cb) _discard_cb(_discard_cb_arg, this);
-    _removeAllCallbacks();
 }
 
 size_t AsyncClient::space()
