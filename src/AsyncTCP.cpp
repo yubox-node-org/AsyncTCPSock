@@ -57,6 +57,7 @@ static uint8_t _readBuffer[MAX_PAYLOAD_SIZE];
 static bool _start_asyncsock_task(void)
 {
     if (!_asyncsock_service_task_handle) {
+        log_i("Creating asyncTcpSock task running in core %d (-1 for any available core)...", CONFIG_ASYNC_TCP_RUNNING_CORE);
         xTaskCreateUniversal(
             _asynctcpsock_task,
             "asyncTcpSock",
