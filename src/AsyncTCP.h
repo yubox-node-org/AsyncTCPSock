@@ -184,6 +184,12 @@ class AsyncClient : public AsyncSocketBase
                           // If false, app owns the memory and should ensure it remains valid until acked
     } queued_writebuf;
 
+    // Internal struct used to implement sent buffer notification
+    typedef struct {
+      uint32_t length;
+      uint32_t delay;
+    } notify_writebuf;
+
     // Queue of buffers to write to socket
     SemaphoreHandle_t _write_mutex;
     std::deque<queued_writebuf> _writeQueue;
@@ -200,6 +206,8 @@ class AsyncClient : public AsyncSocketBase
     void _removeAllCallbacks(void);
     bool _flushWriteQueue(void);
     void _clearWriteQueue(void);
+    void _collectNotifyWrittenBuffers(std::deque<notify_writebuf> &, int &);
+    void _notifyWrittenBuffers(std::deque<notify_writebuf> &, int);
 
     friend void _tcpsock_dns_found(const char * name, struct ip_addr * ipaddr, void * arg);
 };
