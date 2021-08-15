@@ -514,13 +514,14 @@ bool AsyncClient::connect(const char* host, uint16_t port){
       return false;
     }
 
-    //Serial.printf("DEBUG: connect to %s port %d using DNS...\r\n", host, port);
+    log_v("connect to %s port %d using DNS...", host, port);
     err_t err = dns_gethostbyname(host, &addr, (dns_found_callback)&_tcpsock_dns_found, this);
     if(err == ERR_OK) {
-        //Serial.printf("\taddr resolved as %08x, connecting...\r\n", addr.u_addr.ip4.addr);
+        log_v("\taddr resolved as %08x, connecting...", addr.u_addr.ip4.addr);
         return connect(IPAddress(addr.u_addr.ip4.addr), port);
     } else if(err == ERR_INPROGRESS) {
-        //Serial.println("\twaiting for DNS resolution");
+        log_v("\twaiting for DNS resolution");
+        _conn_state = 1;
         _connect_port = port;
         return true;
     }
@@ -552,6 +553,7 @@ void AsyncClient::_sockDelayedConnect(void)
     if (_connect_addr.u_addr.ip4.addr) {
         connect(IPAddress(_connect_addr.u_addr.ip4.addr), _connect_port);
     } else {
+        _conn_state = 0;
         if(_error_cb) {
             _error_cb(_error_cb_arg, this, -55);
         }
