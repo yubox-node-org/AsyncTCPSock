@@ -841,6 +841,8 @@ size_t AsyncClient::add(const char* data, size_t size, uint8_t apiflags)
 
 bool AsyncClient::send()
 {
+    if (!connected()) return false;
+
     fd_set sockSet_w;
     struct timeval tv;
 
