@@ -866,7 +866,7 @@ bool AsyncClient::send()
 bool AsyncClient::_pendingWrite(void)
 {
     xSemaphoreTake(_write_mutex, (TickType_t)portMAX_DELAY);
-    bool pending = (_writeQueue.size() > 0);
+    bool pending = ((_conn_state > 0 && _conn_state < 4) || _writeQueue.size() > 0);
     xSemaphoreGive(_write_mutex);
     return pending;
 }
