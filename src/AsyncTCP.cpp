@@ -93,7 +93,9 @@ void _asynctcpsock_task(void *)
         for (it = _socketBaseList.begin(); it != _socketBaseList.end(); it++) {
             if ((*it)->_socket != -1) {
                 FD_SET((*it)->_socket, &sockSet_r);
-                FD_SET((*it)->_socket, &sockSet_w);
+                if ((*it)->_pendingWrite()) {
+                    FD_SET((*it)->_socket, &sockSet_w);
+                }
                 (*it)->_selected = true;
                 if (max_sock <= (*it)->_socket) max_sock = (*it)->_socket + 1;
             }
@@ -102,9 +104,14 @@ void _asynctcpsock_task(void *)
         // Wait for activity on all monitored sockets
         struct timeval tv;
         tv.tv_sec = 0;
-        tv.tv_usec = 0;
+        tv.tv_usec = ASYNCTCPSOCK_POLL_INTERVAL * 1000;
         uint32_t t1 = millis();
+
+        xSemaphoreGiveRecursive(_asyncsock_mutex);
+
         int r = select(max_sock, &sockSet_r, &sockSet_w, NULL, &tv);
+
+        xSemaphoreTakeRecursive(_asyncsock_mutex, (TickType_t)portMAX_DELAY);
 
         // Check all sockets to see which ones are active
         uint32_t nActive = 0;
@@ -181,15 +188,6 @@ void _asynctcpsock_task(void *)
         sockList.clear();
 
         xSemaphoreGiveRecursive(_asyncsock_mutex);
-
-        uint32_t t2 = millis();
-
-        // Ugly hack to work around the apparent situation of select() call NOT
-        // yielding to other tasks if using a nonzero wait period.
-        uint32_t d = (nActive == 0 && t2 - t1 < ASYNCTCPSOCK_POLL_INTERVAL)
-            ? ASYNCTCPSOCK_POLL_INTERVAL - (t2 - t1)
-            : 1;
-        delay(d);
 
         // Collect and run activity poll on all pollable sockets
         xSemaphoreTakeRecursive(_asyncsock_mutex, (TickType_t)portMAX_DELAY);
@@ -863,6 +861,14 @@ bool AsyncClient::send()
     if (r > 0) _flushWriteQueue();
     xSemaphoreGive(_write_mutex);
     return true;
+}
+
+bool AsyncClient::_pendingWrite(void)
+{
+    xSemaphoreTake(_write_mutex, (TickType_t)portMAX_DELAY);
+    bool pending = (_writeQueue.size() > 0);
+    xSemaphoreGive(_write_mutex);
+    return pending;
 }
 
 // In normal operation this should be a no-op. Will only free something in case

@@ -70,6 +70,8 @@ protected:
     virtual void _sockPoll(void) {}           // Action to take on idle socket activity poll
     virtual void _sockDelayedConnect(void) {} // Action to take on DNS-resolve finished
 
+    virtual bool _pendingWrite(void) { return false; }  // Test if there is data pending to be written
+
 public:
     AsyncSocketBase(void);
     virtual ~AsyncSocketBase();
@@ -142,6 +144,7 @@ class AsyncClient : public AsyncSocketBase
     void _sockIsReadable(void);
     void _sockPoll(void);
     void _sockDelayedConnect(void);
+    bool _pendingWrite(void);
 
   private:
 
