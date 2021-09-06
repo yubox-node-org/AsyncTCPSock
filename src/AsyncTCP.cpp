@@ -46,6 +46,8 @@ typedef std::list<AsyncSocketBase *>::iterator sockIterator;
 
 void _asynctcpsock_task(void *);
 
+#define ASYNCTCPSOCK_POLL_INTERVAL 125
+
 #define MAX_PAYLOAD_SIZE    1360
 
 // Since the only task reading from these sockets is the asyncTcpPSock task
@@ -184,14 +186,16 @@ void _asynctcpsock_task(void *)
 
         // Ugly hack to work around the apparent situation of select() call NOT
         // yielding to other tasks if using a nonzero wait period.
-        uint32_t d = (nActive == 0 && t2 - t1 < 125) ? 125 - (t2 - t1) : 1;
+        uint32_t d = (nActive == 0 && t2 - t1 < ASYNCTCPSOCK_POLL_INTERVAL)
+            ? ASYNCTCPSOCK_POLL_INTERVAL - (t2 - t1)
+            : 1;
         delay(d);
 
         // Collect and run activity poll on all pollable sockets
         xSemaphoreTakeRecursive(_asyncsock_mutex, (TickType_t)portMAX_DELAY);
         for (it = _socketBaseList.begin(); it != _socketBaseList.end(); it++) {
             (*it)->_selected = false;
-            if (millis() - (*it)->_sock_lastactivity >= 125) {
+            if (millis() - (*it)->_sock_lastactivity >= ASYNCTCPSOCK_POLL_INTERVAL) {
                 (*it)->_sock_lastactivity = millis();
                 sockList.push_back(*it);
             }
