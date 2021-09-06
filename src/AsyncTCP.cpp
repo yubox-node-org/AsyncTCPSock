@@ -730,14 +730,16 @@ void AsyncClient::_sockPoll(void)
 
     // ACK Timeout - simulated by write queue staleness
     xSemaphoreTake(_write_mutex, (TickType_t)portMAX_DELAY);
-    uint32_t sent_delay = now - _writeQueue.front().queued_at;
-    if (_writeQueue.size() > 0 && !_ack_timeout_signaled && _ack_timeout && sent_delay >= _ack_timeout) {
-        _ack_timeout_signaled = true;
-        //log_w("ack timeout %d", pcb->state);
-        xSemaphoreGive(_write_mutex);
-        if(_timeout_cb)
-            _timeout_cb(_timeout_cb_arg, this, sent_delay);
-        return;
+    if (_writeQueue.size() > 0 && !_ack_timeout_signaled && _ack_timeout) {
+        uint32_t sent_delay = now - _writeQueue.front().queued_at;
+        if (sent_delay >= _ack_timeout && _writeQueue.front().written_at == 0) {
+            _ack_timeout_signaled = true;
+            //log_w("ack timeout %d", pcb->state);
+            xSemaphoreGive(_write_mutex);
+            if(_timeout_cb)
+                _timeout_cb(_timeout_cb_arg, this, sent_delay);
+            return;
+        }
     }
     xSemaphoreGive(_write_mutex);
 
