@@ -745,6 +745,20 @@ void AsyncClient::_sockPoll(void)
     }
     xSemaphoreGive(_write_mutex);
 
+    // RX Timeout? Check for readable socket before bailing out
+    if (_rx_since_timeout && (now - _rx_last_packet) >= (_rx_since_timeout * 1000)) {
+        fd_set sockSet_r;
+        struct timeval tv;
+
+        FD_ZERO(&sockSet_r);
+        FD_SET(_socket, &sockSet_r);
+        tv.tv_sec = 0;
+        tv.tv_usec = 0;
+
+        int r = select(_socket + 1, &sockSet_r, NULL, NULL, &tv);
+        if (r > 0) _rx_last_packet = now;
+    }
+
     // RX Timeout
     if (_rx_since_timeout && (now - _rx_last_packet) >= (_rx_since_timeout * 1000)) {
         //log_w("rx timeout %d", pcb->state);
