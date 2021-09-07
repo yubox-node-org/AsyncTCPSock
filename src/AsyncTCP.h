@@ -71,6 +71,7 @@ protected:
     virtual void _sockDelayedConnect(void) {} // Action to take on DNS-resolve finished
 
     virtual bool _pendingWrite(void) { return false; }  // Test if there is data pending to be written
+    virtual bool _isServer(void) { return false; }      // Will a read from this socket result in one more client?
 
 public:
     AsyncSocketBase(void);
@@ -239,6 +240,9 @@ class AsyncServer : public AsyncSocketBase
 
     // Listening socket is readable on incoming connection
     void _sockIsReadable(void);
+
+    // Mark this class as a server
+    bool _isServer(void) { return true; }
 };
 
 

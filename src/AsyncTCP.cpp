@@ -92,12 +92,19 @@ void _asynctcpsock_task(void *)
         FD_ZERO(&sockSet_r); FD_ZERO(&sockSet_w);
         for (it = _socketBaseList.begin(); it != _socketBaseList.end(); it++) {
             if ((*it)->_socket != -1) {
-                FD_SET((*it)->_socket, &sockSet_r);
+#ifdef CONFIG_LWIP_MAX_SOCKETS
+                if (!(*it)->_isServer() || _socketBaseList.size() < CONFIG_LWIP_MAX_SOCKETS) {
+#endif
+                    FD_SET((*it)->_socket, &sockSet_r);
+                    if (max_sock <= (*it)->_socket) max_sock = (*it)->_socket + 1;
+#ifdef CONFIG_LWIP_MAX_SOCKETS
+                }
+#endif
                 if ((*it)->_pendingWrite()) {
                     FD_SET((*it)->_socket, &sockSet_w);
+                    if (max_sock <= (*it)->_socket) max_sock = (*it)->_socket + 1;
                 }
                 (*it)->_selected = true;
-                if (max_sock <= (*it)->_socket) max_sock = (*it)->_socket + 1;
             }
         }
 
