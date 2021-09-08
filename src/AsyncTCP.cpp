@@ -88,7 +88,9 @@ void _asynctcpsock_task(void *)
 
         xSemaphoreTakeRecursive(_asyncsock_mutex, (TickType_t)portMAX_DELAY);
 
-        // Collect all of the active sockets into socket set
+        // Collect all of the active sockets into socket set. Half-destroyed
+        // connections should have set _socket to -1 and therefore should not
+        // end up in the sockList.
         FD_ZERO(&sockSet_r); FD_ZERO(&sockSet_w);
         for (it = _socketBaseList.begin(); it != _socketBaseList.end(); it++) {
             if ((*it)->_socket != -1) {
@@ -123,7 +125,9 @@ void _asynctcpsock_task(void *)
         // Check all sockets to see which ones are active
         uint32_t nActive = 0;
         if (r > 0) {
-            // Collect and notify all writable sockets
+            // Collect and notify all writable sockets. Half-destroyed connections
+            // should have set _socket to -1 and therefore should not end up in
+            // the sockList.
             for (it = _socketBaseList.begin(); it != _socketBaseList.end(); it++) {
                 if ((*it)->_selected && FD_ISSET((*it)->_socket, &sockSet_w)) {
                     sockList.push_back(*it);
@@ -147,7 +151,9 @@ void _asynctcpsock_task(void *)
             }
             sockList.clear();
 
-            // Collect and notify all readable sockets
+            // Collect and notify all readable sockets. Half-destroyed connections
+            // should have set _socket to -1 and therefore should not end up in
+            // the sockList.
             for (it = _socketBaseList.begin(); it != _socketBaseList.end(); it++) {
                 if ((*it)->_selected && FD_ISSET((*it)->_socket, &sockSet_r)) {
                     sockList.push_back(*it);
@@ -294,10 +300,12 @@ AsyncClient::AsyncClient(int sockfd)
 
 AsyncClient::~AsyncClient()
 {
+    xSemaphoreTakeRecursive(_asyncsock_mutex, (TickType_t)portMAX_DELAY);
     if (_socket != -1) _close();
     _removeAllCallbacks();
     vSemaphoreDelete(_write_mutex);
     _write_mutex = NULL;
+    xSemaphoreGiveRecursive(_asyncsock_mutex);
 }
 
 void AsyncClient::setRxTimeout(uint32_t timeout){
