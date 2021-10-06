@@ -24,11 +24,19 @@
 #ifndef ASYNCTCP_H_
 #define ASYNCTCP_H_
 
+// TODO: se debe quitar este #define para que pueda habilitarse a voluntad el SSL
+// según el proyecto. Se coloca aquí para probar el desarrollo
+#define ASYNC_TCP_SSL_ENABLED 1
+
 #include "IPAddress.h"
 #include "sdkconfig.h"
 #include <functional>
 #include <deque>
 #include <list>
+#if ASYNC_TCP_SSL_ENABLED
+#include <ssl_client.h>
+#include "tcp_mbedtls.h"
+#endif
 
 extern "C" {
     #include "lwip/err.h"
@@ -46,6 +54,7 @@ class AsyncClient;
 #define ASYNC_MAX_ACK_TIME 5000
 #define ASYNC_WRITE_FLAG_COPY 0x01 //will allocate new buffer to hold the data while sending (else will hold reference to the data given)
 #define ASYNC_WRITE_FLAG_MORE 0x02 //will not send PSH flag, meaning that there should be more data to be sent before the application should react.
+#define SSL_HANDSHAKE_TIMEOUT 5000 // timeout to complete SSL handshake
 
 typedef std::function<void(void*, AsyncClient*)> AcConnectHandler;
 typedef std::function<void(void*, AsyncClient*, size_t len, uint32_t time)> AcAckHandler;
@@ -86,8 +95,17 @@ class AsyncClient : public AsyncSocketBase
     AsyncClient(int sockfd = -1);
     ~AsyncClient();
 
+#if ASYNC_TCP_SSL_ENABLED
+    bool connect(IPAddress ip, uint16_t port, bool secure = false);
+    bool connect(const char* host, uint16_t port,  bool secure = false);
+    void setRootCa(const char* rootca, const size_t len);
+    void setClientCert(const char* cli_cert, const size_t len);
+    void setClientKey(const char* cli_key, const size_t len);
+    void setPsk(const char* psk_ident, const char* psk);
+#else
     bool connect(IPAddress ip, uint16_t port);
     bool connect(const char* host, uint16_t port);
+#endif // ASYNC_TCP_SSL_ENABLED
     void close(bool now = false);
 
     int8_t abort();
@@ -173,6 +191,19 @@ class AsyncClient : public AsyncSocketBase
     struct ip_addr _connect_addr;
     uint16_t _connect_port = 0;
     //const char * _connect_dnsname = NULL;
+
+#if ASYNC_TCP_SSL_ENABLED
+    size_t _root_ca_len;
+    char* _root_ca;
+    size_t _cli_cert_len;
+    char* _cli_cert;
+    size_t _cli_key_len;
+    char* _cli_key;
+    bool _secure;
+    bool _handshake_done;
+    const char* _psk_ident;
+    const char* _psk;
+#endif // ASYNC_TCP_SSL_ENABLED
 
     // The following private struct represents a buffer enqueued with the add()
     // method. Each of these buffers are flushed whenever the socket becomes

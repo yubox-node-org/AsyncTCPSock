@@ -283,6 +283,18 @@ AsyncClient::AsyncClient(int sockfd)
 , _rx_since_timeout(0)
 , _ack_timeout(ASYNC_MAX_ACK_TIME)
 , _connect_port(0)
+#if ASYNC_TCP_SSL_ENABLED
+, _root_ca_len(0)
+, _root_ca(NULL)
+, _cli_cert_len(0)
+, _cli_cert(NULL)
+, _cli_key_len(0)
+, _cli_key(NULL)
+, _secure(false)
+, _handshake_done(true)
+, _psk_ident(0)
+, _psk(0)
+#endif // ASYNC_TCP_SSL_ENABLED
 , _writeSpaceRemaining(TCP_SND_BUF)
 , _conn_state(0)
 {
@@ -468,7 +480,11 @@ uint16_t AsyncClient::localPort() {
 }
 
 
+#if ASYNC_TCP_SSL_ENABLED
+bool AsyncClient::connect(IPAddress ip, uint16_t port, bool secure)
+#else
 bool AsyncClient::connect(IPAddress ip, uint16_t port)
+#endif // ASYNC_TCP_SSL_ENABLED
 {
     if (_socket != -1) {
         log_w("already connected, state %d", _conn_state);
@@ -479,6 +495,11 @@ bool AsyncClient::connect(IPAddress ip, uint16_t port)
         log_e("failed to start task");
         return false;
     }
+
+#if ASYNC_TCP_SSL_ENABLED
+    _secure = secure;
+    _handshake_done = !secure;
+#endif // ASYNC_TCP_SSL_ENABLED
 
     int sockfd = socket(AF_INET, SOCK_STREAM, 0);
     if (sockfd < 0) {
@@ -523,7 +544,11 @@ bool AsyncClient::connect(IPAddress ip, uint16_t port)
 }
 
 void _tcpsock_dns_found(const char * name, struct ip_addr * ipaddr, void * arg);
+#if ASYNC_TCP_SSL_ENABLED
+bool AsyncClient::connect(const char* host, uint16_t port, bool secure){
+#else
 bool AsyncClient::connect(const char* host, uint16_t port){
+#endif // ASYNC_TCP_SSL_ENABLED
     ip_addr_t addr;
     
     if(!_start_asyncsock_task()){
@@ -535,11 +560,19 @@ bool AsyncClient::connect(const char* host, uint16_t port){
     err_t err = dns_gethostbyname(host, &addr, (dns_found_callback)&_tcpsock_dns_found, this);
     if(err == ERR_OK) {
         log_v("\taddr resolved as %08x, connecting...", addr.u_addr.ip4.addr);
+#if ASYNC_TCP_SSL_ENABLED
+        return connect(IPAddress(addr.u_addr.ip4.addr), port, secure);
+#else
         return connect(IPAddress(addr.u_addr.ip4.addr), port);
+#endif // ASYNC_TCP_SSL_ENABLED
     } else if(err == ERR_INPROGRESS) {
         log_v("\twaiting for DNS resolution");
         _conn_state = 1;
         _connect_port = port;
+#if ASYNC_TCP_SSL_ENABLED
+        _secure = secure;
+        _handshake_done = !secure;
+#endif // ASYNC_TCP_SSL_ENABLED
         return true;
     }
     log_e("error: %d", err);
@@ -951,6 +984,28 @@ int8_t AsyncClient::abort(){
     }
     return ERR_ABRT;
 }
+
+#if ASYNC_TCP_SSL_ENABLED
+void AsyncClient::setRootCa(const char* rootca, const size_t len) {
+    _root_ca = (char*)rootca;
+    _root_ca_len = len;
+}
+
+void AsyncClient::setClientCert(const char* cli_cert, const size_t len) {
+    _cli_cert = (char*)cli_cert;
+    _cli_cert_len = len;
+}
+
+void AsyncClient::setClientKey(const char* cli_key, const size_t len) {
+    _cli_key = (char*)cli_key;
+    _cli_key_len = len;
+}
+
+void AsyncClient::setPsk(const char* psk_ident, const char* psk) {
+    _psk_ident = psk_ident;
+    _psk = psk;
+}
+#endif // ASYNC_TCP_SSL_ENABLED
 
 const char * AsyncClient::errorToString(int8_t error){
     switch(error){
