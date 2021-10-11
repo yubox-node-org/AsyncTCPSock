@@ -196,7 +196,7 @@ int AsyncTCP_TLS_Context::runSSLHandshake(void)
         }
 
         // Handshake is taking too long
-        if ((millis()-handshake_start_time) > ssl_client->handshake_timeout)
+        if ((millis()-handshake_start_time) > handshake_timeout)
             return -1;
 
         // Either MBEDTLS_ERR_SSL_WANT_READ or MBEDTLS_ERR_SSL_WANT_WRITE
