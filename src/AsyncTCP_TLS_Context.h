@@ -14,6 +14,8 @@
 #include "mbedtls/ctr_drbg.h"
 #include "mbedtls/error.h"
 
+#define ASYNCTCP_TLS_CAN_RETRY(r) (((r) == MBEDTLS_ERR_SSL_WANT_READ) || ((r) == MBEDTLS_ERR_SSL_WANT_WRITE))
+
 class AsyncTCP_TLS_Context
 {
 private:
@@ -50,6 +52,10 @@ public:
         const char *psKey, bool insecure);
 
     int runSSLHandshake(void);
+
+    int write(const uint8_t *data, size_t len);
+
+    int read(uint8_t * data, size_t len);
 };
 
 #endif // ASYNC_TCP_SSL_ENABLED

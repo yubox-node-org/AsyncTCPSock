@@ -235,6 +235,30 @@ int AsyncTCP_TLS_Context::runSSLHandshake(void)
     return 0;
 }
 
+int AsyncTCP_TLS_Context::write(const uint8_t *data, size_t len)
+{
+    if (_socket < 0) return -1;
+
+    log_v("Writing packet, %d bytes unencrypted...", len);
+    int ret = mbedtls_ssl_write(&ssl_ctx, data, len);
+    if (ret != MBEDTLS_ERR_SSL_WANT_READ && ret != MBEDTLS_ERR_SSL_WANT_WRITE && ret < 0) {
+        log_v("Handling error %d", ret); //for low level debug
+        return handle_error(ret);
+    }
+    return ret;
+}
+
+int AsyncTCP_TLS_Context::read(uint8_t * data, size_t len)
+{
+    int ret = mbedtls_ssl_read(&ssl_ctx, data, len);
+    if (ret != MBEDTLS_ERR_SSL_WANT_READ && ret != MBEDTLS_ERR_SSL_WANT_WRITE && ret < 0) {
+        log_v("Handling error %d", ret); //for low level debug
+        return handle_error(ret);
+    }
+    if (ret > 0) log_v("Read packet, %d out of %d requested bytes...", ret, len);
+    return ret;
+}
+
 void AsyncTCP_TLS_Context::_deleteHandshakeCerts(void)
 {
     if (_have_ca_cert) {
