@@ -183,10 +183,11 @@ int AsyncTCP_TLS_Context::startSSLClient(int sck, const char * host_or_ip, const
 
 int AsyncTCP_TLS_Context::runSSLHandshake(void)
 {
+    int ret, flags;
     if (_socket < 0) return -1;
 
     if (handshake_start_time == 0) handshake_start_time = millis();
-    int ret = mbedtls_ssl_handshake(&ssl_ctx);
+    ret = mbedtls_ssl_handshake(&ssl_ctx);
     if (ret != 0) {
         // Something happened before SSL handshake could be completed
 
@@ -217,6 +218,7 @@ int AsyncTCP_TLS_Context::runSSLHandshake(void)
     log_v("Verifying peer X.509 certificate...");
 
     if ((flags = mbedtls_ssl_get_verify_result(&ssl_ctx)) != 0) {
+        char buf[512];
         memset(buf, 0, sizeof(buf));
         mbedtls_x509_crt_verify_info(buf, sizeof(buf), "  ! ", flags);
         log_e("Failed to verify peer certificate! verification info: %s", buf);
