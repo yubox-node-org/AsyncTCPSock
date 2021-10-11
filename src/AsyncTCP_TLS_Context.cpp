@@ -236,14 +236,17 @@ int AsyncTCP_TLS_Context::runSSLHandshake(void)
 void AsyncTCP_TLS_Context::_deleteHandshakeCerts(void)
 {
     if (_have_ca_cert) {
+        log_v("Cleaning CA certificate.");
         mbedtls_x509_crt_free(&ca_cert);
         _have_ca_cert = false;
     }
     if (_have_client_cert) {
+        log_v("Cleaning client certificate.");
         mbedtls_x509_crt_free(&client_cert);
         _have_client_cert = false;
     }
     if (_have_client_key) {
+        log_v("Cleaning client certificate key.");
         mbedtls_pk_free(&client_key);
         _have_client_key = false;
     }
@@ -252,6 +255,8 @@ void AsyncTCP_TLS_Context::_deleteHandshakeCerts(void)
 AsyncTCP_TLS_Context::~AsyncTCP_TLS_Context()
 {
     _deleteHandshakeCerts();
+
+    log_v("Cleaning SSL connection.");
 
     mbedtls_ssl_free(&ssl_ctx);
     mbedtls_ssl_config_free(&ssl_conf);
