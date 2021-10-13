@@ -162,10 +162,10 @@ int AsyncTCP_TLS_Context::startSSLClient(int sck, const char * host_or_ip, const
     log_v("Setting hostname for TLS session...");
 
     // Hostname set here should match CN in server certificate
-    if((ret = mbedtls_ssl_set_hostname(&ssl_ctx, host_or_ip)) != 0){
+    if ((ret = mbedtls_ssl_set_hostname(&ssl_ctx, host_or_ip)) != 0){
         _deleteHandshakeCerts();
         return handle_error(ret);
-	}
+    }
 
     mbedtls_ssl_conf_rng(&ssl_conf, mbedtls_ctr_drbg_random, &drbg_ctx);
 
