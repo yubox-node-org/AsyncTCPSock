@@ -203,6 +203,9 @@ class AsyncClient : public AsyncSocketBase
     bool _handshake_done;
     const char* _psk_ident;
     const char* _psk;
+
+    String _hostname;
+    AsyncTCP_TLS_Context * _sslctx;
 #endif // ASYNC_TCP_SSL_ENABLED
 
     // The following private struct represents a buffer enqueued with the add()
@@ -243,6 +246,10 @@ class AsyncClient : public AsyncSocketBase
     void _clearWriteQueue(void);
     void _collectNotifyWrittenBuffers(std::deque<notify_writebuf> &, int &);
     void _notifyWrittenBuffers(std::deque<notify_writebuf> &, int);
+
+#if ASYNC_TCP_SSL_ENABLED
+    int _runSSLHandshakeLoop(void);
+#endif
 
     friend void _tcpsock_dns_found(const char * name, struct ip_addr * ipaddr, void * arg);
 };
