@@ -14,7 +14,8 @@
 #include "mbedtls/ctr_drbg.h"
 #include "mbedtls/error.h"
 
-#define ASYNCTCP_TLS_CAN_RETRY(r) (((r) == MBEDTLS_ERR_SSL_WANT_READ) || ((r) == MBEDTLS_ERR_SSL_WANT_WRITE))
+#define ASYNCTCP_TLS_CAN_RETRY(r)   (((r) == MBEDTLS_ERR_SSL_WANT_READ) || ((r) == MBEDTLS_ERR_SSL_WANT_WRITE))
+#define ASYNCTCP_TLS_EOF(r)         (((r) == MBEDTLS_ERR_SSL_CONN_EOF) || ((r) == MBEDTLS_ERR_SSL_PEER_CLOSE_NOTIFY))
 
 class AsyncTCP_TLS_Context
 {
@@ -38,8 +39,6 @@ private:
     unsigned long handshake_start_time;
 
     int _socket;
-
-
 
     // Delete certificates used in handshake
     void _deleteHandshakeCerts(void);
