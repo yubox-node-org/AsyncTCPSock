@@ -40,15 +40,33 @@ private:
 
     int _socket;
 
+    int _startSSLClient(int sck, const char * host_or_ip,
+        const unsigned char *rootCABuff, const size_t rootCABuff_len,
+        const unsigned char *cli_cert, const size_t cli_cert_len,
+        const unsigned char *cli_key, const size_t cli_key_len,
+        const char *pskIdent, const char *psKey,
+        bool insecure);
+
     // Delete certificates used in handshake
     void _deleteHandshakeCerts(void);
 public:
     AsyncTCP_TLS_Context(void);
     virtual ~AsyncTCP_TLS_Context();
 
-    int startSSLClient(int sck, const char * host_or_ip, const char *rootCABuff,
-        const char *cli_cert, const char *cli_key, const char *pskIdent,
-        const char *psKey, bool insecure);
+    int startSSLClientInsecure(int sck, const char * host_or_ip);
+
+    int startSSLClient(int sck, const char * host_or_ip,
+        const char *pskIdent, const char *psKey);
+
+    int startSSLClient(int sck, const char * host_or_ip,
+        const char *rootCABuff,
+        const char *cli_cert,
+        const char *cli_key);
+
+    int startSSLClient(int sck, const char * host_or_ip,
+        const unsigned char *rootCABuff, const size_t rootCABuff_len,
+        const unsigned char *cli_cert, const size_t cli_cert_len,
+        const unsigned char *cli_key, const size_t cli_key_len);
 
     int runSSLHandshake(void);
 

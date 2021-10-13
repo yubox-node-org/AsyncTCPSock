@@ -46,9 +46,57 @@ AsyncTCP_TLS_Context::AsyncTCP_TLS_Context(void)
     handshake_timeout = 120000;
 }
 
-int AsyncTCP_TLS_Context::startSSLClient(int sck, const char * host_or_ip, const char *rootCABuff,
-        const char *cli_cert, const char *cli_key, const char *pskIdent,
-        const char *psKey, bool insecure)
+int AsyncTCP_TLS_Context::startSSLClientInsecure(int sck, const char * host_or_ip)
+{
+    return _startSSLClient(sck, host_or_ip,
+        NULL, 0,
+        NULL, 0,
+        NULL, 0,
+        NULL, NULL,
+        true);
+}
+
+int AsyncTCP_TLS_Context::startSSLClient(int sck, const char * host_or_ip,
+        const char *pskIdent, const char *psKey)
+{
+    return _startSSLClient(sck, host_or_ip,
+        NULL, 0,
+        NULL, 0,
+        NULL, 0,
+        pskIdent, psKey,
+        false);
+}
+
+int AsyncTCP_TLS_Context::startSSLClient(int sck, const char * host_or_ip,
+        const char *rootCABuff,
+        const char *cli_cert,
+        const char *cli_key)
+{
+    return startSSLClient(sck, host_or_ip,
+        (const unsigned char *)rootCABuff, (rootCABuff != NULL) ? strlen(rootCABuff) + 1 : 0,
+        (const unsigned char *)cli_cert, (cli_cert != NULL) ? strlen(cli_cert) + 1 : 0,
+        (const unsigned char *)cli_key, (cli_key != NULL) ? strlen(cli_key) + 1 : 0);
+}
+
+int AsyncTCP_TLS_Context::startSSLClient(int sck, const char * host_or_ip,
+        const unsigned char *rootCABuff, const size_t rootCABuff_len,
+        const unsigned char *cli_cert, const size_t cli_cert_len,
+        const unsigned char *cli_key, const size_t cli_key_len)
+{
+    return _startSSLClient(sck, host_or_ip,
+        rootCABuff, rootCABuff_len,
+        cli_cert, cli_cert_len,
+        cli_key, cli_key_len,
+        NULL, NULL,
+        false);
+}
+
+int AsyncTCP_TLS_Context::_startSSLClient(int sck, const char * host_or_ip,
+        const unsigned char *rootCABuff, const size_t rootCABuff_len,
+        const unsigned char *cli_cert, const size_t cli_cert_len,
+        const unsigned char *cli_key, const size_t cli_key_len,
+        const char *pskIdent, const char *psKey,
+        bool insecure)
 {
     int ret;
     int enable = 1;
@@ -91,7 +139,7 @@ int AsyncTCP_TLS_Context::startSSLClient(int sck, const char * host_or_ip, const
         log_v("Loading CA cert");
         mbedtls_x509_crt_init(&ca_cert);
         mbedtls_ssl_conf_authmode(&ssl_conf, MBEDTLS_SSL_VERIFY_REQUIRED);
-        ret = mbedtls_x509_crt_parse(&ca_cert, (const unsigned char *)rootCABuff, strlen(rootCABuff) + 1);
+        ret = mbedtls_x509_crt_parse(&ca_cert, rootCABuff, rootCABuff_len);
         _have_ca_cert = true;
         mbedtls_ssl_conf_ca_chain(&ssl_conf, &ca_cert, NULL);
         if (ret < 0) {
@@ -139,7 +187,7 @@ int AsyncTCP_TLS_Context::startSSLClient(int sck, const char * host_or_ip, const
 
         log_v("Loading CRT cert");
 
-        ret = mbedtls_x509_crt_parse(&client_cert, (const unsigned char *)cli_cert, strlen(cli_cert) + 1);
+        ret = mbedtls_x509_crt_parse(&client_cert, cli_cert, cli_cert_len);
         _have_client_cert = true;
         if (ret < 0) {
             // free the client_cert in the case parse failed, otherwise, the old client_cert still in the heap memory, that lead to "out of memory" crash.
@@ -148,7 +196,7 @@ int AsyncTCP_TLS_Context::startSSLClient(int sck, const char * host_or_ip, const
         }
 
         log_v("Loading private key");
-        ret = mbedtls_pk_parse_key(&client_key, (const unsigned char *)cli_key, strlen(cli_key) + 1, NULL, 0);
+        ret = mbedtls_pk_parse_key(&client_key, cli_key, cli_key_len, NULL, 0);
         _have_client_key = true;
 
         if (ret != 0) {
