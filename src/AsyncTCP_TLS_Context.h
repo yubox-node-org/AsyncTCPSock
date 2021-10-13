@@ -1,9 +1,5 @@
 #pragma once
 
-// TODO: se debe quitar este #define para que pueda habilitarse a voluntad el SSL
-// según el proyecto. Se coloca aquí para probar el desarrollo
-#define ASYNC_TCP_SSL_ENABLED 1
-
 #if ASYNC_TCP_SSL_ENABLED
 
 #include "mbedtls/platform.h"
