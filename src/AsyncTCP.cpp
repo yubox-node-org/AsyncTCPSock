@@ -63,7 +63,7 @@ static bool _start_asyncsock_task(void)
         xTaskCreateUniversal(
             _asynctcpsock_task,
             "asyncTcpSock",
-            8192 * 2,
+            CONFIG_ASYNC_TCP_STACK,
             NULL,
             3,                              // <-- TODO: make priority a compile-time parameter
             &_asyncsock_service_task_handle,
