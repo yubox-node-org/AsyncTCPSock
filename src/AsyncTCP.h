@@ -47,6 +47,9 @@ extern "C" {
 #ifndef CONFIG_ASYNC_TCP_STACK
 #define CONFIG_ASYNC_TCP_STACK 16384  // 8192 * 2
 #endif
+#ifndef CONFIG_ASYNC_TCP_TASK_PRIORITY
+#define CONFIG_ASYNC_TCP_TASK_PRIORITY 3
+#endif
 
 class AsyncClient;
 

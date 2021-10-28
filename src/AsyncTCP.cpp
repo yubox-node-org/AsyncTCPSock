@@ -65,7 +65,7 @@ static bool _start_asyncsock_task(void)
             "asyncTcpSock",
             CONFIG_ASYNC_TCP_STACK,
             NULL,
-            3,                              // <-- TODO: make priority a compile-time parameter
+            CONFIG_ASYNC_TCP_TASK_PRIORITY,
             &_asyncsock_service_task_handle,
             CONFIG_ASYNC_TCP_RUNNING_CORE);
         if (!_asyncsock_service_task_handle) return false;
