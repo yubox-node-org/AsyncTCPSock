@@ -5,6 +5,9 @@
 const char* ssid        = "YOUR-WIFI-SSID-HERE";
 const char* password    = "YOUR-WIFI-PASSWORD-HERE";
 
+// On your Arduino projects, create the file build_opt.h if it does not exist
+// and add the following single line to enable AsyncTCP SSL support:
+// -DASYNC_TCP_SSL_ENABLED=1
 #ifndef ASYNC_TCP_SSL_ENABLED
 #error The macro ASYNC_TCP_SSL_ENABLED has not been correctly enabled in your environment!
 #endif
