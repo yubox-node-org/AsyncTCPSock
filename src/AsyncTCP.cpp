@@ -593,9 +593,9 @@ void _tcpsock_dns_found(const char * name, struct ip_addr * ipaddr, void * arg)
     }
 
     // Updating state visible to asyncTcpSock task
-    xSemaphoreTakeRecursive(_asyncsock_mutex, (TickType_t)portMAX_DELAY);
+    // MUST NOT take _asyncsock_mutex lock, risks a deadlock if task holding lock
+    // attempts a LWIP network call.
     c->_isdnsfinished = true;
-    xSemaphoreGiveRecursive(_asyncsock_mutex);
 
     // TODO: actually use name
 }
