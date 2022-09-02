@@ -307,6 +307,7 @@ AsyncClient::AsyncClient(int sockfd)
         xSemaphoreTakeRecursive(_asyncsock_mutex, (TickType_t)portMAX_DELAY);
         _conn_state = 4;
         _socket = sockfd;
+        _rx_last_packet = millis();
         xSemaphoreGiveRecursive(_asyncsock_mutex);
     }
 }
