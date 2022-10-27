@@ -114,7 +114,6 @@ void _asynctcpsock_task(void *)
         struct timeval tv;
         tv.tv_sec = 0;
         tv.tv_usec = ASYNCTCPSOCK_POLL_INTERVAL * 1000;
-        uint32_t t1 = millis();
 
         xSemaphoreGiveRecursive(_asyncsock_mutex);
 
@@ -301,7 +300,7 @@ AsyncClient::AsyncClient(int sockfd)
 {
     _write_mutex = xSemaphoreCreateMutex();
     if (sockfd != -1) {
-        int r = fcntl( sockfd, F_SETFL, fcntl( sockfd, F_GETFL, 0 ) | O_NONBLOCK );
+        fcntl( sockfd, F_SETFL, fcntl( sockfd, F_GETFL, 0 ) | O_NONBLOCK );
 
         // Updating state visible to asyncTcpSock task
         xSemaphoreTakeRecursive(_asyncsock_mutex, (TickType_t)portMAX_DELAY);
@@ -1244,7 +1243,7 @@ void AsyncServer::begin()
         log_e("listen error: %d - %s", errno, strerror(errno));
         return;
     }
-    int r = fcntl(sockfd, F_SETFL, O_NONBLOCK);
+    fcntl(sockfd, F_SETFL, O_NONBLOCK);
 
     // Updating state visible to asyncTcpSock task
     xSemaphoreTakeRecursive(_asyncsock_mutex, (TickType_t)portMAX_DELAY);
