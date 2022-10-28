@@ -898,7 +898,7 @@ void AsyncClient::_sockIsReadable(void)
 
 void AsyncClient::_sockPoll(void)
 {
-    if (_socket == -1) return;
+    if (!connected()) return;
 
     uint32_t now = millis();
 
