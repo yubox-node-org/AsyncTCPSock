@@ -900,6 +900,20 @@ void AsyncClient::_sockPoll(void)
 {
     if (!connected()) return;
 
+    // The AsyncClient::send() call may be invoked from tasks other than "asyncTcpSock"
+    // and may have written buffers via _flushWriteQueue(), but the ack callbacks have
+    // not been called yet, nor buffers removed from the write queue. For consistency,
+    // written buffers are now acked here.
+    std::deque<notify_writebuf> notifylist;
+    int sent_errno = 0;
+    xSemaphoreTake(_write_mutex, (TickType_t)portMAX_DELAY);
+    if (_writeQueue.size() > 0) {
+        _collectNotifyWrittenBuffers(notifylist, sent_errno);
+    }
+    xSemaphoreGive(_write_mutex);
+
+    _notifyWrittenBuffers(notifylist, sent_errno);
+
     uint32_t now = millis();
 
     // ACK Timeout - simulated by write queue staleness
