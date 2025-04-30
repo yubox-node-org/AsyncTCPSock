@@ -2,8 +2,13 @@
 
 #if ASYNC_TCP_SSL_ENABLED
 
+#include "mbedtls/version.h"
 #include "mbedtls/platform.h"
+#if MBEDTLS_VERSION_NUMBER < 0x03000000
 #include "mbedtls/net.h"
+#else
+#include "mbedtls/net_sockets.h"
+#endif
 #include "mbedtls/debug.h"
 #include "mbedtls/ssl.h"
 #include "mbedtls/entropy.h"

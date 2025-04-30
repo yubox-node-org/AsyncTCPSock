@@ -196,7 +196,11 @@ int AsyncTCP_TLS_Context::_startSSLClient(int sck, const char * host_or_ip,
         }
 
         log_v("Loading private key");
+#if MBEDTLS_VERSION_NUMBER < 0x03000000
         ret = mbedtls_pk_parse_key(&client_key, cli_key, cli_key_len, NULL, 0);
+#else
+        ret = mbedtls_pk_parse_key(&client_key, cli_key, cli_key_len, NULL, 0, mbedtls_ctr_drbg_random, &drbg_ctx);
+#endif
         _have_client_key = true;
 
         if (ret != 0) {

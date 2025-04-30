@@ -351,7 +351,7 @@ bool AsyncClient::getNoDelay(){
     if (_socket == -1) return false;
 
     int flag = 0;
-    size_t size = sizeof(int);
+    socklen_t size = sizeof(int);
     int res = getsockopt(_socket, IPPROTO_TCP, TCP_NODELAY, (char *)&flag, &size);
     if(res < 0) {
         log_e("fail on fd %d, errno: %d, \"%s\"", _socket, errno, strerror(errno));
@@ -913,6 +913,9 @@ void AsyncClient::_sockPoll(void)
     xSemaphoreGive(_write_mutex);
 
     _notifyWrittenBuffers(notifylist, sent_errno);
+
+    /* Connection migh be closed after ACK notification. */
+    if (!connected()) return;
 
     uint32_t now = millis();
 
